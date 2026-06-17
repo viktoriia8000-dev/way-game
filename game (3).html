@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Свой путь</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Playfair+Display:wght@700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --text: #e8e4f0;
+    --text-muted: #9b96b0;
+    --accent: #c084fc;
+    --border: rgba(255,255,255,0.08);
+    --btn-bg: rgba(255,255,255,0.07);
+    --btn-hover: rgba(192,132,252,0.18);
+    --btn-border: rgba(192,132,252,0.3);
+  }
+
+  html, body {
+    height: 100%; height: 100dvh;
+    font-family: 'Nunito', sans-serif;
+    background: #0f1724;
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  #bg-layer {
+    position: fixed; inset: 0; z-index: 0;
+    background-size: cover; background-position: center;
+    transition: background-image 0.6s ease;
+  }
+  #bg-layer::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, rgba(8,10,20,0.55) 0%, rgba(8,10,20,0.92) 100%);
+  }
+
+  #app {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column;
+    height: 100vh; height: 100dvh;
+    max-width: 720px; margin: 0 auto;
+  }
+
+  /* STATS */
+  #stats {
+    display: flex; gap: 6px; padding: 10px 14px 6px;
+    flex-shrink: 0;
+  }
+  .stat {
+    flex: 1; background: rgba(0,0,0,0.5);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 6px 8px; text-align: center;
+  }
+  .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); line-height: 1; }
+  .stat-value { font-size: 20px; font-weight: 700; line-height: 1.2; margin-top: 2px; }
+  .stat-bar { height: 3px; border-radius: 2px; margin-top: 3px; background: rgba(255,255,255,0.1); overflow: hidden; }
+  .stat-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+  #sv-anx { color: #f87171; } #sf-anx { background: #f87171; }
+  #sv-ind { color: #c084fc; } #sf-ind { background: #c084fc; }
+  #sv-prg { color: #6ee7b7; } #sf-prg { background: #6ee7b7; }
+  #sv-stg { color: #fb923c; } #sf-stg { background: #fb923c; }
+
+  /* SCENE */
+  #scene {
+    flex: 1; overflow-y: auto; padding: 10px 14px 4px;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #text-box {
+    background: rgba(12,14,28,0.8);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--border);
+    border-left: 3px solid #ffaa44;
+    border-radius: 20px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    min-height: 80px;
+  }
+  #scene-text { font-size: 18px; line-height: 1.6; color: var(--text); }
+  #scene-text .line {
+    opacity: 0; transform: translateY(5px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    display: block; margin-bottom: 2px;
+  }
+  #scene-text .line.shown { opacity: 1; transform: none; }
+
+  /* TIMER */
+  #timer-wrap { display: none; margin-top: 10px; }
+  #timer-label { font-size: 13px; color: #fb923c; font-weight: 700; margin-bottom: 4px; }
+  #timer-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+  #timer-fill { height: 100%; background: linear-gradient(90deg,#f87171,#fb923c); border-radius: 2px; transition: width 1s linear; }
+
+  /* CHOICES */
+  #choices {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 0 14px 12px; flex-shrink: 0;
+  }
+
+  .choice-btn {
+    background: var(--btn-bg);
+    border: 1px solid var(--btn-border);
+    border-radius: 50px; padding: 13px 20px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 16px; font-weight: 600;
+    color: var(--text); cursor: pointer; text-align: left;
+    transition: background 0.2s, transform 0.15s;
+    line-height: 1.4;
+    opacity: 0; transform: translateY(6px);
+    animation: fadeUp 0.3s ease forwards;
+  }
+  .choice-btn:nth-child(1){animation-delay:.04s}
+  .choice-btn:nth-child(2){animation-delay:.1s}
+  .choice-btn:nth-child(3){animation-delay:.16s}
+  .choice-btn:nth-child(4){animation-delay:.22s}
+  .choice-btn:hover { background: var(--btn-hover); transform: translateX(4px); }
+  .choice-btn:active { transform: scale(0.98); }
+  @keyframes fadeUp { to { opacity:1; transform:none; } }
+
+  #psych-btn {
+    background: rgba(110,231,183,0.1);
+    border: 1px solid rgba(110,231,183,0.4);
+    border-radius: 50px; padding: 12px 20px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px; font-weight: 700;
+    color: #6ee7b7; cursor: pointer; text-align: left;
+    transition: background 0.2s, transform 0.15s;
+    display: none; margin-bottom: 4px;
+  }
+  #psych-btn:hover { background: rgba(110,231,183,0.2); transform: translateX(4px); }
+
+  /* FOOTER */
+  #footer {
+    display: flex; gap: 8px; padding: 0 14px 14px;
+    flex-shrink: 0;
+  }
+  .foot-btn {
+    flex: 1; background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border); border-radius: 30px;
+    font-family: 'Nunito', sans-serif; font-size: 13px;
+    color: var(--text-muted); cursor: pointer; padding: 8px 10px;
+    transition: background 0.2s;
+  }
+  .foot-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+  /* MODAL */
+  #modal {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.88); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  #modal-box {
+    background: #141828; border: 1px solid var(--border);
+    border-radius: 24px; padding: 30px 26px;
+    max-width: 360px; width: 100%; text-align: center;
+  }
+  #modal-box h2 { font-family: 'Playfair Display', serif; font-size: 22px; margin-bottom: 10px; color: var(--accent); }
+  #modal-box p { font-size: 15px; color: var(--text-muted); margin-bottom: 22px; line-height: 1.5; }
+  .m-btn {
+    display: block; width: 100%; padding: 13px;
+    border-radius: 12px; border: 1px solid var(--btn-border);
+    background: var(--btn-bg); color: var(--text);
+    font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 700;
+    cursor: pointer; margin-bottom: 10px; transition: background 0.2s;
+  }
+  .m-btn:hover { background: var(--btn-hover); }
+  .m-btn.primary { background: linear-gradient(135deg,#7c3aed,#c084fc); border-color: transparent; color: #fff; }
+
+  /* PSYCH IMAGE */
+  #psych-img {
+    position: fixed; bottom: 0; right: 0; z-index: 5;
+    width: min(180px,38vw); display: none; opacity: 0;
+    transition: opacity 0.5s;
+    pointer-events: none;
+  }
+  #psych-img img { width: 100%; display: block; }
+
+  @media (max-width: 480px) {
+    .stat-value { font-size: 17px; }
+    #scene-text { font-size: 17px; }
+    .choice-btn { font-size: 15px; padding: 12px 16px; }
+  }
+
+  /* PASSWORD SCREEN */
+  #pwd-screen {
+    position: fixed; inset: 0; z-index: 200;
+    background: #0a0d18;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  #pwd-box {
+    text-align: center; max-width: 340px; width: 100%;
+  }
+  #pwd-logo { font-size: 48px; margin-bottom: 16px; }
+  #pwd-box h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px; color: var(--accent);
+    margin-bottom: 8px;
+  }
+  #pwd-box p { font-size: 15px; color: var(--text-muted); margin-bottom: 24px; }
+  #pwd-input {
+    width: 100%; padding: 14px 18px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--btn-border);
+    border-radius: 14px; color: var(--text);
+    font-family: 'Nunito', sans-serif; font-size: 17px;
+    outline: none; text-align: center; letter-spacing: 0.15em;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  #pwd-input:focus { border-color: var(--accent); }
+  #pwd-submit {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg,#7c3aed,#c084fc);
+    border: none; border-radius: 14px;
+    font-family: 'Nunito', sans-serif; font-size: 17px; font-weight: 700;
+    color: #fff; cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  #pwd-submit:hover { opacity: 0.88; }
+  #pwd-error {
+    margin-top: 12px; font-size: 14px;
+    color: #f87171; min-height: 20px;
+  }
+</style>
+</head>
+<body>
+
+<div id="bg-layer"></div>
+
+<div id="app">
+  <div id="stats">
+    <div class="stat">
+      <div class="stat-label">😰 Тревога</div>
+      <div class="stat-value" id="sv-anx">0</div>
+      <div class="stat-bar"><div class="stat-fill" id="sf-anx" style="width:0%"></div></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">🕊️ Самост.</div>
+      <div class="stat-value" id="sv-ind">0</div>
+      <div class="stat-bar"><div class="stat-fill" id="sf-ind" style="width:0%"></div></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">📈 Прогресс</div>
+      <div class="stat-value" id="sv-prg">0</div>
+      <div class="stat-bar"><div class="stat-fill" id="sf-prg" style="width:0%"></div></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">⏳ Стагнация</div>
+      <div class="stat-value" id="sv-stg">0</div>
+      <div class="stat-bar"><div class="stat-fill" id="sf-stg" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div id="scene">
+    <div id="text-box">
+      <div id="scene-text"></div>
+      <div id="timer-wrap">
+        <div id="timer-label">⏱️ 10 секунд...</div>
+        <div id="timer-bar"><div id="timer-fill" style="width:100%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="choices">
+    <button id="psych-btn">🧠 Психолог (снизить тревогу)</button>
+  </div>
+
+  <div id="footer">
+    <button class="foot-btn" onclick="resetGame()">🔄 Заново</button>
+    <button class="foot-btn" onclick="saveGame()">💾 Сохранить</button>
+    <button class="foot-btn" onclick="loadGame()">📀 Загрузить</button>
+  </div>
+</div>
+
+<div id="psych-img"><img src="images/psychologist.jpg" alt="" onerror="this.parentElement.style.display='none'"></div>
+
+<div id="pwd-screen">
+  <div id="pwd-box">
+    <div id="pwd-logo">🗝️</div>
+    <h2>Свой путь</h2>
+    <p>Введи пароль для доступа к игре</p>
+    <input id="pwd-input" type="password" placeholder="Пароль..." autocomplete="off" />
+    <button id="pwd-submit" onclick="checkPassword()">Войти</button>
+    <div id="pwd-error"></div>
+  </div>
+</div>
+
+<div id="modal">
+  <div id="modal-box">
+    <h2 id="m-title">Свой путь</h2>
+    <p id="m-text">Продолжить сохранённую игру или начать заново?</p>
+    <button class="m-btn primary" id="m-btn1" onclick="modalAct(1)">Продолжить</button>
+    <button class="m-btn" id="m-btn2" onclick="modalAct(2)">Начать заново</button>
+  </div>
+</div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────
+let gs = { node:"node1", тревога:0, самостоятельность:0, прогресс:0, стагнация:0, circleCount:0 };
+let timerInt = null, bgDelayInt = null, textInt = null;
+let mCb1 = null, mCb2 = null;
+
+const SAVE_KEY = "svoy_put_v2";
+
+// ─── MODAL ────────────────────────────────────────────────
+const modal = document.getElementById("modal");
+function showModal(title, text, b1, b2, cb1, cb2) {
+  document.getElementById("m-title").textContent = title;
+  document.getElementById("m-text").textContent = text;
+  document.getElementById("m-btn1").textContent = b1;
+  document.getElementById("m-btn2").textContent = b2;
+  mCb1=cb1; mCb2=cb2; modal.style.display="flex";
+}
+function hideModal(){ modal.style.display="none"; }
+function modalAct(n){ hideModal(); (n===1?mCb1:mCb2)?.(); }
+
+// ─── BACKGROUND ───────────────────────────────────────────
+const bgEl = document.getElementById("bg-layer");
+function setBg(key){
+  if(!key){ bgEl.style.backgroundImage="none"; return; }
+  const src=`images/${key}.jpg`;
+  const img=new Image();
+  img.onload=()=>bgEl.style.backgroundImage=`url('${src}')`;
+  img.onerror=()=>bgEl.style.backgroundImage="none";
+  img.src=src;
+}
+
+// ─── STATS ────────────────────────────────────────────────
+function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+function applyFx(fx){
+  if(!fx)return;
+  if(fx.тревога)          gs.тревога          = clamp(gs.тревога+fx.тревога,0,10);
+  if(fx.самостоятельность)gs.самостоятельность= clamp(gs.самостоятельность+fx.самостоятельность,0,20);
+  if(fx.прогресс)         gs.прогресс         = clamp(gs.прогресс+fx.прогресс,0,20);
+  if(fx.стагнация)        gs.стагнация        = clamp(gs.стагнация+fx.стагнация,0,20);
+  updateStatsUI();
+}
+function updateStatsUI(){
+  const t=gs.тревога, i=gs.самостоятельность, p=gs.прогресс, s=gs.стагнация;
+  document.getElementById("sv-anx").textContent=t;
+  document.getElementById("sv-ind").textContent=i;
+  document.getElementById("sv-prg").textContent=p;
+  document.getElementById("sv-stg").textContent=s;
+  document.getElementById("sf-anx").style.width=(t/10*100)+"%";
+  document.getElementById("sf-ind").style.width=(i/20*100)+"%";
+  document.getElementById("sf-prg").style.width=(p/20*100)+"%";
+  document.getElementById("sf-stg").style.width=(s/20*100)+"%";
+  document.getElementById("sv-anx").style.color = t>=7?"#ff8866":"#f87171";
+
+  const pb = document.getElementById("psych-btn");
+  const pi = document.getElementById("psych-img");
+  if(t>=7){
+    pb.style.display="block";
+    pi.style.display="block"; setTimeout(()=>pi.style.opacity="1",50);
+  } else {
+    pb.style.display="none";
+    pi.style.opacity="0"; setTimeout(()=>pi.style.display="none",500);
+  }
+}
+
+// ─── TEXT ─────────────────────────────────────────────────
+const sceneText = document.getElementById("scene-text");
+function renderText(lines, cb){
+  sceneText.innerHTML="";
+  clearTimeout(textInt);
+  if(!lines||!lines.length||(lines.length===1&&lines[0]==="")){
+    cb?.(); return;
+  }
+  lines.forEach(l=>{
+    const el=document.createElement("span");
+    el.className="line"; el.textContent=l||"\u00A0";
+    sceneText.appendChild(el);
+  });
+  const spans=[...sceneText.querySelectorAll(".line")];
+  let i=0;
+  function next(){
+    if(i<spans.length){ spans[i++].classList.add("shown"); textInt=setTimeout(next,380); }
+    else cb?.();
+  }
+  next();
+}
+function renderSequential(lines, interval, cb){
+  sceneText.innerHTML="";
+  let i=0;
+  function next(){
+    if(i<lines.length){
+      const el=document.createElement("span");
+      el.className="line"; el.textContent=lines[i++];
+      sceneText.appendChild(el);
+      setTimeout(()=>el.classList.add("shown"),30);
+      if(i<lines.length) textInt=setTimeout(next,interval);
+      else setTimeout(()=>cb?.(),400);
+    }
+  }
+  next();
+}
+
+// ─── TIMER ────────────────────────────────────────────────
+const timerWrap=document.getElementById("timer-wrap");
+const timerLabel=document.getElementById("timer-label");
+const timerFill=document.getElementById("timer-fill");
+function startTimer(secs, onDone){
+  timerWrap.style.display="block";
+  timerLabel.textContent=`⏱️ ${secs} секунд...`;
+  timerFill.style.transition="none"; timerFill.style.width="100%";
+  requestAnimationFrame(()=>{
+    timerFill.style.transition=`width ${secs}s linear`; timerFill.style.width="0%";
+  });
+  let rem=secs;
+  clearInterval(timerInt);
+  timerInt=setInterval(()=>{
+    rem--;
+    timerLabel.textContent=`⏱️ ${rem} секунд...`;
+    if(rem<=0){ clearInterval(timerInt); timerWrap.style.display="none"; onDone?.(); }
+  },1000);
+}
+function stopTimer(){ clearInterval(timerInt); timerWrap.style.display="none"; }
+
+// ─── CHOICES ──────────────────────────────────────────────
+const choicesDiv=document.getElementById("choices");
+function clearChoices(){ [...choicesDiv.querySelectorAll(".choice-btn")].forEach(b=>b.remove()); }
+function renderChoices(choices){
+  clearChoices();
+  choices.forEach((ch,i)=>{
+    const btn=document.createElement("button");
+    btn.className="choice-btn";
+    btn.style.animationDelay=(0.04+i*0.07)+"s";
+    btn.textContent=ch.text;
+    btn.onclick=()=>{
+      stopTimer();
+      if(bgDelayInt){ clearInterval(bgDelayInt); bgDelayInt=null; }
+      if(ch.statChanges) applyFx(ch.statChanges);
+      if(ch.nextNode) gotoNode(ch.nextNode);
+    };
+    choicesDiv.appendChild(btn);
+  });
+}
+
+// ─── PSYCHOLOGIST ─────────────────────────────────────────
+document.getElementById("psych-btn").onclick=()=>{
+  const prev=gs.node;
+  gs.тревога=Math.max(0,gs.тревога-2);
+  gs.самостоятельность=Math.min(20,gs.самостоятельность+1);
+  updateStatsUI(); saveGame();
+  clearChoices(); setBg("psychologist");
+  renderText(["Психолог: «Помни, что работа должна тебе нравиться. Ты уже пробовал работать там, где тебе было плохо. Тебе нужна поддержка, а не упрёки»."],()=>{
+    renderChoices([{text:"Спасибо, продолжу",nextNode:prev}]);
+  });
+};
+
+// ─── GOTO / RENDER ────────────────────────────────────────
+function gotoNode(nodeId){
+  stopTimer();
+  if(bgDelayInt){ clearInterval(bgDelayInt); bgDelayInt=null; }
+  clearChoices();
+
+  // panic at trevoga 10
+  if(gs.тревога>=10 && !["node17","goodEnd","badEnd","neutralEnd"].includes(nodeId)){
+    nodeId="node17";
+  }
+
+  // circle counter: node7 → node3 repeated 3 times → node17
+  if(nodeId==="node7"){
+    gs.circleCount++;
+    if(gs.circleCount>=3){ gs.circleCount=0; nodeId="node17"; }
+  }
+
+  gs.node=nodeId; saveGame();
+
+  const n=scenes[nodeId];
+  if(!n){ console.error("Node not found:",nodeId); return; }
+
+  // node-level stat effect
+  if(n.effect) applyFx(n.effect);
+
+  setBg(n.bg||"");
+
+  // FINALS
+  if(n.isFinal){ renderFinal(n); return; }
+
+  // AUTO (no choices, just go next after delay)
+  if(n.auto){
+    renderText(n.text||[""],()=>{
+      setTimeout(()=>{
+        if(n.autoFx) applyFx(n.autoFx);
+        gotoNode(n.autoNext);
+      }, n.text&&n.text[0]?1800:500);
+    });
+    return;
+  }
+
+  // NODE 4 special: timed sequential text
+  if(nodeId==="node4"){
+    renderSequential(n.timedText, 1800, ()=>{
+      startTimer(n.timerSeconds, ()=>{
+        if(n.timeoutFx) applyFx(n.timeoutFx);
+        gotoNode(n.timeoutTarget);
+      });
+      renderChoices(n.choices);
+    });
+    return;
+  }
+
+  // NODE 20 special: two-phase text + bg change
+  if(nodeId==="node20"){
+    renderText(n.text||[""],()=>{
+      bgDelayInt=setTimeout(()=>{
+        if(n.bg2) setBg(n.bg2);
+        renderText(n.text2||[""],()=>{ renderChoices(n.choices); });
+      },1800);
+    });
+    return;
+  }
+
+  renderText(n.text||[""],()=>{ if(n.choices) renderChoices(n.choices); });
+}
+
+function renderFinal(n){
+  renderText(n.text||[""],()=>{
+    setTimeout(()=>{
+      showModal(
+        n.title||"Конец",
+        `Прогресс: ${gs.прогресс} | Тревога: ${gs.тревога} | Самост.: ${gs.самостоятельность}`,
+        "🔄 Начать заново","Остаться",
+        ()=>resetGame(),
+        ()=>hideModal()
+      );
+    },5500);
+  });
+}
+
+// ─── SAVE / LOAD / RESET ──────────────────────────────────
+function saveGame(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(gs)); }catch(e){} }
+function loadGame(){
+  try{
+    const s=localStorage.getItem(SAVE_KEY);
+    if(s){ gs=JSON.parse(s); updateStatsUI(); setBg(scenes[gs.node]?.bg||""); gotoNode(gs.node); alert("Загружено"); }
+    else alert("Нет сохранений");
+  }catch(e){ alert("Ошибка загрузки"); }
+}
+function resetGame(){
+  stopTimer();
+  if(bgDelayInt){ clearInterval(bgDelayInt); bgDelayInt=null; }
+  gs={ node:"node1", тревога:0, самостоятельность:0, прогресс:0, стагнация:0, circleCount:0 };
+  updateStatsUI(); hideModal();
+  gotoNode("node1");
+}
+
+// ─── SCENES ───────────────────────────────────────────────
+const scenes = {
+  node1:{
+    bg:"1",
+    text:["Я наконец-то смог встать с кровати, всю ночь были тяжёлые мысли. Нет работы, денег совсем мало."],
+    choices:[
+      {text:"Вспомнить, что было на прошлом месте работы", nextNode:"node2", statChanges:{тревога:+1}},
+      {text:"Начать день с хорошего, послушать музыку, выпить кофе и подкрепиться", nextNode:"node9"}
+    ]
+  },
+  node2:{
+    bg:"2",
+    text:["Я вспоминаю, как начальник кричал на меня и швырял мой отчёт. Становится очень паршиво."],
+    choices:[
+      {text:"Подойти к ноутбуку и начать искать вакансии", nextNode:"node3", statChanges:{тревога:+1}},
+      {text:"Успокоиться, выдохнуть, позавтракать и выпить кофе", nextNode:"node9"}
+    ]
+  },
+  node3:{
+    bg:"3",
+    text:["Как же хочется спать… Я сонный открываю ноутбук. Нахожу вакансию с графиком по 12 часов. Я уже работал с похожим графиком, и было очень тяжело на ногах целый день. Кроме того, работа неинтересная: просто раскладывать товар на складе строительного магазина."],
+    choices:[
+      {text:"Откликнуться и отправить резюме", nextNode:"node4", statChanges:{тревога:+1}},
+      {text:"Продолжить искать дальше", nextNode:"node7", statChanges:{тревога:+1}},
+      {text:"Успокоиться и пойти завтракать", nextNode:"node9"}
+    ]
+  },
+  node4:{
+    bg:"3",
+    timerSeconds:10,
+    timedText:[
+      "Работодатель: «Выходить надо завтра, аванса нет, зарплата через месяц. Зато работа стабильная. Оформим только через месяц!»",
+      "«Ждать вас?»",
+      "Нет, я не хочу! Мне не нравится такая работа, там неинтересно…"
+    ],
+    timeoutTarget:"node6",
+    timeoutFx:{тревога:+2},
+    choices:[
+      {text:"Согласиться", nextNode:"node5"},
+      {text:"Сказать: «Нет, мне не подходит»", nextNode:"node9"}
+    ]
+  },
+  node5:{
+    bg:"5",
+    text:["Я выхожу на работу. Оказывается, 15 часов на ногах, и просто раскладывать коробки. Как уныло и бессмысленно… Надо срочно найти другую работу."],
+    choices:[
+      {text:"Начать искать другие вакансии", nextNode:"node6", statChanges:{тревога:+2,стагнация:+2}},
+      {text:"Успокоиться", nextNode:"node9", statChanges:{тревога:-1}}
+    ]
+  },
+  node6:{
+    bg:"6",
+    text:["Я так устал, мне нужно отдохнуть."],
+    choices:[
+      {text:"Снова искать вакансии", nextNode:"node7", statChanges:{тревога:+2}},
+      {text:"Отдохнуть и успокоиться", nextNode:"node9", statChanges:{тревога:-1}}
+    ]
+  },
+  node7:{
+    bg:"7",
+    text:["Как хочется есть, и болит голова."],
+    choices:[
+      {text:"Продолжить", nextNode:"node3", statChanges:{тревога:+1,прогресс:-1}}
+    ]
+  },
+  node9:{
+    bg:"9",
+    text:["Я готовлю еду, ставлю кофе, включаю приятную музыку. Сердцебиение успокаивается. Приходят трезвые мысли. Я уже давно думал начать работать на себя, я могу быть репетитором или писать работы на заказ."],
+    choices:[
+      {text:"Опубликовать объявление о своих услугах (репетиторство)", nextNode:"node10", statChanges:{самостоятельность:+1}},
+      {text:"Позвонить отцу", nextNode:"node12"}
+    ]
+  },
+  node10:{
+    bg:"10",
+    text:["Надо опубликовать как можно больше объявлений, чтобы набрать клиентов."],
+    choices:[
+      {text:"Отказаться — деньги заканчиваются, не надо страдать ерундой. Отец говорил, что надо держаться за стабильную работу", nextNode:"node3", statChanges:{тревога:+1,стагнация:+1}},
+      {text:"Попробовать — иначе я никогда не узнаю, получится у меня или нет", nextNode:"node10_5", statChanges:{самостоятельность:+1}},
+      {text:"Поговорить с другом, у которого свой бизнес", nextNode:"node11"}
+    ]
+  },
+  node10_5:{
+    bg:"10",
+    text:["Через два часа приходит первое сообщение. Клиент пишет: «Добрый день! Нужна помощь с математикой, 9 класс. Можете начать завтра?»"],
+    auto:true, autoFx:{тревога:-1,самостоятельность:+1}, autoNext:"node13"
+  },
+  node11:{
+    bg:"11",
+    text:["Друг говорит мне: «Подумай, что тебя вдохновляет? Что у тебя получалось делать, за что ты уже получал деньги, работая на себя? Главное, не паникуй. Всё получится, но не сразу». Я отвечаю: «Мне нужно отдохнуть и спокойно подумать»."],
+    choices:[
+      {text:"Пойти выпить кофе/чая, расслабиться, подумать", nextNode:"node14", statChanges:{тревога:-1,самостоятельность:+1}},
+      {text:"Срочно искать вакансии, ведь нужна работа. А пока я смогу стабильно работать на себя, ведь это пройдёт много времени", nextNode:"node14", statChanges:{тревога:+2}}
+    ]
+  },
+  node12:{
+    bg:"12",
+    text:["Я говорю отцу: «Да, папа, всё в порядке, я найду работу». Отец отвечает: «Не надо было уходить с прошлого места, надо держаться за то, что есть»."],
+    auto:true, autoFx:{тревога:+2,стагнация:+2,самостоятельность:-1}, autoNext:"node6"
+  },
+  node13:{
+    bg:"13",
+    text:["Времени нет, денег осталось максимум на месяц. Но надо передохнуть, обдумать всё спокойно."],
+    choices:[
+      {text:"Найти вакансию работать на кого-то. На себя работать не получится", nextNode:"node14", statChanges:{тревога:+1,стагнация:+1}},
+      {text:"Спокойно продолжить искать способ работать на себя", nextNode:"node15", statChanges:{прогресс:+1}}
+    ]
+  },
+  node14:{
+    bg:"14",
+    text:["Друг говорит: «Всё в порядке, попробуй работать на себя. Я могу пока дать тебе в долг, чтобы ты комфортно себя чувствовал. Могу дать тебе в долг месяца на 2-3»."],
+    choices:[
+      {text:"Взять и поблагодарить", nextNode:"node16", statChanges:{тревога:-2,самостоятельность:+1}},
+      {text:"Взять в долг", nextNode:"node16", statChanges:{тревога:-1,прогресс:+1}},
+      {text:"Не брать. В долг берут только бездельники", nextNode:"node17", statChanges:{тревога:+2,стагнация:+2}}
+    ]
+  },
+  node15:{
+    bg:"15",
+    text:["Всё хорошо, но денег не хватит на жизнь… Хотя прошло всего две недели, это не показатель. Клиенты ещё появятся."],
+    choices:[
+      {text:"Поискать работу в найме", nextNode:"node18", statChanges:{тревога:+1}},
+      {text:"Продолжать искать способы поиска клиентов", nextNode:"node19", statChanges:{прогресс:+2}}
+    ]
+  },
+  node16:{
+    bg:"16",
+    text:["Новое сообщение: «К Вам хотят записаться на занятие. Написать клиенту о необходимости предоплаты?»"],
+    choices:[
+      {text:"Согласиться на занятие", nextNode:"node16_5", statChanges:{самостоятельность:+1,прогресс:+2}},
+      {text:"Подумать позже, сначала отдохнуть", nextNode:"node9", statChanges:{тревога:-1}}
+    ]
+  },
+  node16_5:{
+    bg:"16",
+    text:["Первое занятие прошло отлично. Клиент написал: «Спасибо! Ребёнку очень понравилось. Будем заниматься дальше». На душе тепло."],
+    auto:true, autoFx:{тревога:-2,прогресс:+2}, autoNext:"node20"
+  },
+  node17:{
+    bg:"17",
+    text:["Тревога зашкаливает. Кажется, что всё идёт не так и выхода нет. Я уже пробовал соглашаться на работу, которая мне не подходит, и это привело только к усталости. Если заставлять себя – буду уставать быстрее и всё равно захочу уйти. Что мне делать?"],
+    choices:[
+      {text:"Закончить игру и обдумать свои решения", nextNode:"node1"},
+      {text:"Принять помощь от друга", nextNode:"node14"},
+      {text:"Поискать варианты заработка на себя", nextNode:"node26"},
+      {text:"Попробовать работать в найме", nextNode:"node18"}
+    ]
+  },
+  node18:{
+    bg:"18",
+    text:["Я звоню туда, где работал раньше. Мне там не нравилось, но это только ради денег. Другого выхода нет."],
+    choices:[
+      {text:"Закончить игру и вернуться на старую работу", nextNode:"neutralEnd"},
+      {text:"Продолжить игру и искать варианты работы, которая нравится", nextNode:"node26"}
+    ]
+  },
+  node19:{
+    bg:"19",
+    text:["Клиенты появляются. Денег немного, но на жизнь хватает. Впервые за несколько месяцев я чувствую спокойствие. Я могу влиять на свою жизнь, а не плыть по течению."],
+    choices:[
+      {text:"Продолжить работать на себя", nextNode:"node20", statChanges:{самостоятельность:+1}},
+      {text:"Наслаждаться успехом", nextNode:"goodEnd", statChanges:{прогресс:+2}}
+    ]
+  },
+  node20:{
+    bg:"20",
+    bg2:"20",
+    text:["Друг говорит: «Видишь, стоит успокоиться — и тут же находятся новые варианты»."],
+    text2:["Когда мы с другом сидели в баре, подошёл мой однокурсник. Он съязвил: «Тебе за 30, а нормальной работы нет?»"],
+    choices:[
+      {text:"Не обращать внимания. Его слова не имеют значения", nextNode:"node21", statChanges:{самостоятельность:+1}},
+      {text:"Поговорить с ним? Может, он прав?", nextNode:"node22"}
+    ]
+  },
+  node21:{
+    bg:"21",
+    text:["Может, он прав? Мне уже за 30, а нормальной работы действительно нет."],
+    choices:[
+      {text:"Посмотреть вакансии и найти что-то стабильное, даже если работа не нравится", nextNode:"node23", statChanges:{тревога:+1}},
+      {text:"Обратиться к знакомому репетитору. Мы вместе работали, но он ушёл работать на себя. Спросить совета", nextNode:"node24", statChanges:{самостоятельность:+1}}
+    ]
+  },
+  node22:{
+    bg:"22",
+    text:["Однокурсник говорит: «Не надо заморачиваться. Все работают нечестно. Ты учитель? Можешь работать менеджером по продажам образовательных курсов. Стабильные деньги. Вот вакансия в знакомой фирме»."],
+    choices:[
+      {text:"Согласиться и позвонить, сходить на собеседование на менеджера по продажам", nextNode:"node25", statChanges:{стагнация:+2}},
+      {text:"Не соглашаться — «Мне это неинтересно»", nextNode:"node21", statChanges:{самостоятельность:+1}},
+      {text:"Встать и уйти («Я сам решу»)", nextNode:"node21", statChanges:{самостоятельность:+2}}
+    ]
+  },
+  node23:{
+    bg:"23",
+    text:["Я снова ищу вакансии в панике. Я ничего хорошего не придумаю, если не успокоюсь."],
+    choices:[
+      {text:"Успокоиться, выпить кофе, посмотреть комедию, а потом думать о том, как заработать", nextNode:"node26", statChanges:{тревога:-1,самостоятельность:+1}},
+      {text:"Продолжить паниковать и найти вакансию менеджера по продажам — платить будут сразу", nextNode:"node25", statChanges:{тревога:+1,стагнация:+1}}
+    ]
+  },
+  node24:{
+    bg:"24",
+    text:["Друг говорит: «Да, нам в компании нужны репетиторы. Я могу тебя порекомендовать»."],
+    choices:[
+      {text:"Испугаться: «Вдруг я сделаю неправильно? Вдруг я плохо учился?»", nextNode:"node27", statChanges:{тревога:+2}},
+      {text:"Согласиться — я смогу", nextNode:"node30", statChanges:{прогресс:+1}}
+    ]
+  },
+  node25:{
+    bg:"25",
+    text:["Я должен продавать курсы по обучению, хотя они не такие эффективные. Это всё равно что обманывать: давить, манипулировать, подгонять клиентов, чтобы они купили. От этого зависит, получу ли я зарплату. Здесь даже нет оклада."],
+    choices:[
+      {text:"Продолжить работать и пытаться заработать", nextNode:"node29", statChanges:{стагнация:+2,прогресс:-2}},
+      {text:"Отказаться — меня уволят (работа неофициальная)", nextNode:"node27"},
+      {text:"Выйти на улицу, продышаться и поговорить с кем-то", nextNode:"node28"}
+    ]
+  },
+  node26:{
+    bg:"26",
+    text:["Я нахожу ещё пару сайтов для объявлений. Также могу продать старые учебники — денег хватит на две недели."],
+    choices:[
+      {text:"Попробовать найти клиентов", nextNode:"node19", statChanges:{самостоятельность:+2,прогресс:+2}},
+      {text:"Сначала отдохнуть и набраться сил", nextNode:"node9", statChanges:{тревога:-1}},
+      {text:"Сразу начать работать над приложением", nextNode:"node32", statChanges:{самостоятельность:+2}}
+    ]
+  },
+  node26_5:{
+    bg:"26",
+    text:["Я помогаю другу с математикой. Он говорит: «Ты так здорово объясняешь. Почему бы тебе не сделать обучающее видео или даже приложение?» Я улыбаюсь. Может, он прав?"],
+    choices:[
+      {text:"Согласиться — отличная идея!", nextNode:"node32", statChanges:{самостоятельность:+2}}
+    ]
+  },
+  node27:{
+    bg:"27",
+    text:["Я звоню отцу. Я говорю: «Ничего не получается. Работа — только обманывать». Отец отвечает: «Что поделать? Обманывать так обманывать. Нет денег — нет права выбирать. Работай где придётся. Это не преступление — просто работа»."],
+    choices:[
+      {text:"Позвонить на работу и попроситься обратно", nextNode:"node29", statChanges:{стагнация:+1}},
+      {text:"Не звонить", nextNode:"node42"}
+    ]
+  },
+  node28:{
+    bg:"28",
+    text:["Я выхожу на улицу, дышу свежим воздухом."],
+    choices:[
+      {text:"Поговорить с психологом", nextNode:"node42"}
+    ]
+  },
+  node29:{
+    bg:"29",
+    text:["Босс говорит: «На этот раз продавай как следует. Если не выполнишь показатели — не заплачу ни рубля»."],
+    choices:[
+      {text:"Согласиться и попытаться выполнить план", nextNode:"node25", statChanges:{тревога:+2}},
+      {text:"Уйти с этой работы", nextNode:"node26", statChanges:{самостоятельность:+2}},
+      {text:"Сказать боссу правду: обманывать я не буду", nextNode:"node19", statChanges:{самостоятельность:+3,тревога:-1}}
+    ]
+  },
+  node30:{
+    bg:"30",
+    text:["Моё первое занятие провалилось. Написали плохой отзыв. «Я совсем не гожусь в репетиторы», — думаю я. Ещё я подставил друга, который меня рекомендовал."],
+    choices:[
+      {text:"Уйти с этого места, я ни на что не гожусь", nextNode:"node31", statChanges:{тревога:+3,стагнация:+2}},
+      {text:"Не сдаваться — каждый может ошибиться. Это моё первое занятие. Подготовиться лучше", nextNode:"node30_5", statChanges:{прогресс:+2,самостоятельность:+2}},
+      {text:"Вернуться на свою старую работу", nextNode:"node18"}
+    ]
+  },
+  node30_5:{
+    bg:"30",
+    text:["Я сижу дома и анализирую прошедший урок. Надо вспомнить, что у меня получилось, а что нет. Мне понравилось проводить уроки — это главное. Мне нравится проявлять инициативу и обсуждать с учениками."],
+    choices:[
+      {text:"Прорешать ошибки — я помню, что допустил ошибку в расчётах. Надо вспомнить всё — тем более задачи такие интересные!", nextNode:"node39"},
+      {text:"Отдохнуть — я очень устал, мне нужно немного отдохнуть", nextNode:"node41"}
+    ]
+  },
+  node31:{
+    bg:"31",
+    text:["Психолог говорит: «Не нужно выбирать работу, которая вам не нравится. Поищите другие варианты. Помните, что у вас всегда есть выбор»."],
+    choices:[
+      {text:"Начать сначала с новым пониманием", nextNode:"node42", statChanges:{тревога:-2,самостоятельность:+1}}
+    ]
+  },
+  node32:{
+    bg:"32",
+    text:["А что, если создать приложение для подготовки к экзаменам? Задания, объяснения, тесты. Может, у меня получится?"],
+    choices:[
+      {text:"Отказаться — слишком сложно. У меня не получится", nextNode:"node26", statChanges:{тревога:+1}},
+      {text:"Узнать, как это сделать", nextNode:"node33", statChanges:{самостоятельность:+2}}
+    ]
+  },
+  node33:{
+    bg:"33",
+    text:["Я изучил, как создавать приложения. Я сделаю его за 2-3 недели. Попрошу друзей протестировать и скажу им, было ли им удобно."],
+    effect:{тревога:-1,прогресс:+2},
+    choices:[
+      {text:"Показать отцу — пусть увидит, что я работаю и добиваюсь успеха", nextNode:"node34"},
+      {text:"Опубликовать в соцсетях — может, кто-то заинтересуется и захочет купить", nextNode:"node35"}
+    ]
+  },
+  node34:{
+    bg:"34",
+    text:["Отец говорит: «Приложение? Ты серьёзно? Лучше найди нормальную работу. Это всё игрушки, денег не принесёт»."],
+    effect:{тревога:+2,стагнация:+1},
+    choices:[
+      {text:"Согласиться с отцом — он прав, я занимаюсь ерундой", nextNode:"node26", statChanges:{тревога:+1,стагнация:+2}},
+      {text:"Продолжать — я пока не знаю, принесёт ли это деньги, но мне это нравится", nextNode:"node35", statChanges:{самостоятельность:+2}}
+    ]
+  },
+  node35:{
+    bg:"35",
+    text:["Я опубликовал демо-версию приложения. За неделю его установили 50 человек. Мне прислали донат. Пишут отзывы, что им нравится."],
+    effect:{тревога:-2,прогресс:+3,самостоятельность:+2},
+    choices:[
+      {text:"Поверить в себя — возможно, я смогу зарабатывать на своих проектах и работать на себя?", nextNode:"node36"},
+      {text:"Продолжать бесплатно — публиковать гайды и тесты, искать клиентов. Приложение доделывать в свободное время", nextNode:"node37"}
+    ]
+  },
+  node36:{
+    bg:"36",
+    text:["Я нашёл сайт, где можно опубликовать свой проект и открыть счёт для донатов. Так я смогу создать полноценное приложение и жить на эти деньги, пока занимаюсь разработкой. Также мне нужно привлечь других специалистов."],
+    auto:true, autoFx:{прогресс:+2}, autoNext:"node36_5"
+  },
+  node36_5:{
+    bg:"36",
+    text:["Прошёл месяц. 340 человек поддержали проект. Пишут отзывы, что им нравится приложение. Один из спонсоров — учитель математики — написал, что это «отличная идея»."],
+    auto:true, autoFx:{тревога:-3,прогресс:+5,самостоятельность:+3}, autoNext:"goodEnd"
+  },
+  node37:{
+    bg:"37",
+    text:["ПРОШЛО ПОЛГОДА. Всё неплохо. Я работаю репетитором, мне хватает оплачивать счета, и я спокойно себя чувствую. У меня уже достаточно клиентов, их число растёт."],
+    auto:true, autoFx:{прогресс:+3,самостоятельность:+2}, autoNext:"node38"
+  },
+  node38:{
+    bg:"38",
+    text:["Приложение приносит небольшой доход, пользователи перечисляют донаты в благодарность. Денег немного. Может, вернуться в найм? Страшно работать на себя — даже репетиторство кажется нестабильным."],
+    choices:[
+      {text:"Оставить как хобби и найти стабильную работу", nextNode:"neutralEnd"},
+      {text:"Работать на себя — создавать приложения и зарабатывать на этом, ни от кого не зависеть", nextNode:"goodEnd"},
+      {text:"Продать разработку приложения, получить деньги и вернуться в найм", nextNode:"badEnd", statChanges:{прогресс:-2,стагнация:+2}}
+    ]
+  },
+  node39:{
+    bg:"39",
+    text:["Я прорешал все сложные темы, вспомнил забытые формулы. Мне снова предложили провести урок, и я согласился. Всё прошло прекрасно! Ученик всё понял, родители поблагодарили. Я чувствую уверенность и радость."],
+    choices:[
+      {text:"Предложить свои услуги как составителя курсов", nextNode:"node40", statChanges:{тревога:-3,самостоятельность:+2,прогресс:+3}},
+      {text:"Продолжать проводить обычные уроки", nextNode:"node19"}
+    ]
+  },
+  node40:{
+    bg:"40",
+    text:["Я написал клиенту: «Я также могу составить для вашего ребёнка индивидуальный план занятий и учебные материалы». Клиент удивился и согласился. Теперь я не просто репетитор, а разработчик учебных материалов."],
+    choices:[
+      {text:"Развивать это направление", nextNode:"node36", statChanges:{прогресс:+3,самостоятельность:+2}}
+    ]
+  },
+  node41:{
+    bg:"41",
+    text:["Я решил не торопиться. Выспался, погулял, привёл мысли в порядок. На следующий день мне приходит письмо от другой семьи: «Нам посоветовали вас как репетитора. Нужна помощь с математикой. Когда сможете начать?»"],
+    choices:[
+      {text:"Попробовать провести занятие и понять, нравится ли мне это", nextNode:"goodEnd", statChanges:{тревога:-2,самостоятельность:+1}},
+      {text:"Сделать приложение для подготовки к экзаменам", nextNode:"goodEnd", statChanges:{тревога:-2,самостоятельность:+2}},
+      {text:"Вернуться на старую работу, хоть она и не нравится", nextNode:"badEnd", statChanges:{стагнация:+2}}
+    ]
+  },
+  node42:{
+    bg:"42",
+    text:["Мне нравится преподавать, я могу составить собственные уроки."],
+    choices:[
+      {text:"Найти новых клиентов и вести уроки как репетитор", nextNode:"node16", statChanges:{самостоятельность:+2}},
+      {text:"Написать свои курсы и продать", nextNode:"node40", statChanges:{самостоятельность:+2}}
+    ]
+  },
+
+  // FINALS
+  goodEnd:{
+    bg:"good_end", isFinal:true,
+    title:"Конец",
+    text:["Я чувствую спокойствие. Я могу влиять на свою жизнь и свой заработок. Клиенты есть, деньги тоже. Такое ощущение, что жизнь только началась."]
+  },
+  neutralEnd:{
+    bg:"18", isFinal:true,
+    title:"Конец",
+    text:["Эта работа мне не очень нравится, но это стабильно. Мне нужно время, чтобы обдумать, чего я хочу и как этого достичь."]
+  },
+  badEnd:{
+    bg:"17", isFinal:true,
+    title:"Конец",
+    text:["Мне не нравится эта работа. Она не нравилась мне с самого начала, но я не слушал себя. Я слушал чужие советы и боялся сделать свой собственный выбор. Мне нужно успокоиться и начать всё сначала."]
+  }
+};
+
+// ─── PASSWORD ─────────────────────────────────────────────
+// Чтобы сменить пароль — просто измени строку ниже
+const GAME_PASSWORD = "свойпуть2025";
+const PWD_KEY = "svoy_put_auth";
+
+function checkPassword(){
+  const val = document.getElementById("pwd-input").value.trim().toLowerCase();
+  if(val === GAME_PASSWORD.toLowerCase()){
+    try{ localStorage.setItem(PWD_KEY,"1"); }catch(e){}
+    document.getElementById("pwd-screen").style.display="none";
+    startAfterAuth();
+  } else {
+    const err = document.getElementById("pwd-error");
+    err.textContent="Неверный пароль, попробуй ещё раз";
+    document.getElementById("pwd-input").value="";
+    document.getElementById("pwd-input").focus();
+    setTimeout(()=>err.textContent="",2500);
+  }
+}
+// Enter key support
+document.getElementById("pwd-input").addEventListener("keydown", e=>{
+  if(e.key==="Enter") checkPassword();
+});
+
+function startAfterAuth(){
+  const saved = (()=>{ try{ const s=localStorage.getItem(SAVE_KEY); return s?JSON.parse(s):null; }catch(e){return null;} })();
+  if(saved && saved.node && saved.node!=="node1"){
+    showModal(
+      "Свой путь",
+      "Продолжить сохранённую игру или начать заново?",
+      "Продолжить","Начать заново",
+      ()=>{ gs=saved; updateStatsUI(); gotoNode(gs.node); },
+      ()=>resetGame()
+    );
+  } else {
+    hideModal();
+    resetGame();
+  }
+}
+
+// ─── BOOT ─────────────────────────────────────────────────
+(function boot(){
+  document.getElementById("pwd-screen").style.display="none";
+  const saved = (()=>{ try{ const s=localStorage.getItem(SAVE_KEY); return s?JSON.parse(s):null; }catch(e){return null;} })();
+  if(saved && saved.node && saved.node!=="node1"){
+    showModal(
+      "Свой путь",
+      "Продолжить сохранённую игру или начать заново?",
+      "Продолжить","Начать заново",
+      ()=>{ gs=saved; updateStatsUI(); gotoNode(gs.node); },
+      ()=>resetGame()
+    );
+  } else {
+    hideModal();
+    resetGame();
+  }
+})();
+</script>
+</body>
+</html>
