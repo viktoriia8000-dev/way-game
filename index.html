@@ -462,6 +462,8 @@ function gotoNode(nodeId){
 
   // panic at trevoga 10
   if(gs.тревога>=10 && !["node17","goodEnd","badEnd","neutralEnd"].includes(nodeId)){
+    gs.тревога=9; // сбрасываем до 9, чтобы выборы в node17 работали
+    updateStatsUI();
     nodeId="node17";
   }
 
@@ -508,12 +510,21 @@ function gotoNode(nodeId){
   }
 
   // NODE 20 special: two-phase text + bg change
-  if(nodeId==="node20"){
+  if(nodeId==="node20" || n.autoAfter2){
     renderText(n.text||[""],()=>{
       bgDelayInt=setTimeout(()=>{
         if(n.bg2) setBg(n.bg2);
-        renderText(n.text2||[""],()=>{ renderChoices(n.choices); });
-      },1800);
+        renderText(n.text2||[""],()=>{
+          if(n.autoAfter2){
+            setTimeout(()=>{
+              if(n.autoFx) applyFx(n.autoFx);
+              gotoNode(n.autoNext);
+            },1800);
+          } else {
+            renderChoices(n.choices);
+          }
+        });
+      }, n.delay2||1800);
     });
     return;
   }
@@ -650,7 +661,12 @@ const scenes = {
   node12:{
     bg:"12",
     text:["Я говорю отцу: «Да, папа, всё в порядке, я найду работу». Отец отвечает: «Не надо было уходить с прошлого места, надо держаться за то, что есть»."],
-    auto:true, autoFx:{тревога:+2,стагнация:+2,самостоятельность:-1}, autoNext:"node6"
+    text2:["Слова отца давят. Снова то же самое…"],
+    bg2:"6",
+    delay2:4000,
+    autoAfter2:true,
+    autoFx:{тревога:+2,стагнация:+2,самостоятельность:-1},
+    autoNext:"node6"
   },
   node13:{
     bg:"13",
